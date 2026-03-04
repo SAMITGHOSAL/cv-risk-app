@@ -1,0 +1,6 @@
+dash
+dash-bootstrap-components
+pandas
+catboost
+scikit-learn
+gunicorn
