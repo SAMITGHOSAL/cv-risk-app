@@ -148,20 +148,32 @@ def predict_risk(n_clicks, age, sex, bmi, smoking, sbp, chol, hdl, conditions):
         angina = 1 if "angina" in conditions else 0
         ckd = 1 if "ckd" in conditions else 0
 
-        df = pd.DataFrame([{
-            "Age": age,
-            "Sex": sex,
-            "BMI": bmi,
-            "Smoking": smoking,
-            "SystolicBP": sbp,
-            "BPTreatment": bp_treat,
-            "Angina": angina,
-            "TotalCholesterol": chol,
-            "CholHDLRatio": chol_ratio,
-            "CKD": ckd
-        }])
+        df = pd.DataFrame([[
 
-        prob = model.predict(df)[0]
+    float(age),
+    float(sex),
+    float(bmi),
+    float(smoking),
+    float(sbp),
+    float(bp_treat),
+    float(angina),
+    float(chol),
+    float(chol_ratio),
+    float(ckd)
+
+]], columns=[
+    "Age",
+    "Sex",
+    "BMI",
+    "Smoking",
+    "SystolicBP",
+    "BPTreatment",
+    "Angina",
+    "TotalCholesterol",
+    "CholHDLRatio",
+    "CKD"
+])
+       prob = model.predict_proba(df)[0][1]
 
         risk_class = "HIGH RISK" if prob >= 0.5 else "LOW RISK"
         color = "red" if prob >= 0.5 else "green"
