@@ -3,6 +3,7 @@ from dash import dcc, html
 from dash.dependencies import Input, Output, State
 import pandas as pd
 import pickle
+from catboost import Pool
 
 # -------------------------
 # Initialize Dash
@@ -173,8 +174,8 @@ def predict_risk(n_clicks, age, sex, bmi, smoking, sbp, chol, hdl, conditions):
     "CholHDLRatio",
     "CKD"
 ])
-       prob = model.predict_proba(df)[0][1]
-
+pool = Pool(df)
+prob = model.predict_proba(pool)[0][1]
         risk_class = "HIGH RISK" if prob >= 0.5 else "LOW RISK"
         color = "red" if prob >= 0.5 else "green"
 
