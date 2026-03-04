@@ -1,9 +1,15 @@
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
-import dash_bootstrap_components as dbc
 import pandas as pd
 import pickle
+
+app = dash.Dash(__name__)
+server = app.server
+
+# Load model once
+with open("catboost.pickle", "rb") as f:
+    model = pickle.load(f)
 
 # -----------------------------
 # Load trained model
