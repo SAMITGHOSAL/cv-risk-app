@@ -4,23 +4,23 @@ from dash.dependencies import Input, Output, State
 import pandas as pd
 import pickle
 
-# ---------------------------
+# -------------------------
 # Initialize Dash
-# ---------------------------
+# -------------------------
 
 app = dash.Dash(__name__)
 server = app.server
 
-# ---------------------------
-# Load ML Model
-# ---------------------------
+# -------------------------
+# Load Machine Learning Model
+# -------------------------
 
 with open("catboost.pickle", "rb") as f:
     model = pickle.load(f)
 
-# ---------------------------
-# Layout
-# ---------------------------
+# -------------------------
+# App Layout
+# -------------------------
 
 app.layout = html.Div([
 
@@ -29,7 +29,7 @@ app.layout = html.Div([
     html.Br(),
 
     html.Label("Age"),
-    dcc.Input(id="age", type="number"),
+    dcc.Input(id="age", type="number", placeholder="Enter age"),
 
     html.Br(),
     html.Br(),
@@ -47,7 +47,7 @@ app.layout = html.Div([
     html.Br(),
 
     html.Label("BMI"),
-    dcc.Input(id="bmi", type="number"),
+    dcc.Input(id="bmi", type="number", placeholder="BMI"),
 
     html.Br(),
     html.Br(),
@@ -65,24 +65,25 @@ app.layout = html.Div([
     html.Br(),
 
     html.Label("Systolic Blood Pressure"),
-    dcc.Input(id="sbp", type="number"),
+    dcc.Input(id="sbp", type="number", placeholder="SBP"),
 
     html.Br(),
     html.Br(),
 
     html.Label("Total Cholesterol"),
-    dcc.Input(id="chol", type="number"),
+    dcc.Input(id="chol", type="number", placeholder="Total Cholesterol"),
 
     html.Br(),
     html.Br(),
 
     html.Label("HDL Cholesterol"),
-    dcc.Input(id="hdl", type="number"),
+    dcc.Input(id="hdl", type="number", placeholder="HDL"),
 
     html.Br(),
     html.Br(),
 
     html.Label("Medical Conditions"),
+
     dcc.Checklist(
         id="conditions",
         options=[
@@ -94,7 +95,7 @@ app.layout = html.Div([
 
     html.Br(),
 
-    html.Button("Calculate Risk", id="predict"),
+    html.Button("Calculate Risk", id="predict", n_clicks=0),
 
     html.Br(),
     html.Br(),
@@ -111,9 +112,9 @@ app.layout = html.Div([
 
 ])
 
-# ---------------------------
-# Prediction Callback
-# ---------------------------
+# -------------------------
+# Prediction Function
+# -------------------------
 
 @app.callback(
     Output("output", "children"),
@@ -125,50 +126,61 @@ app.layout = html.Div([
     State("sbp", "value"),
     State("chol", "value"),
     State("hdl", "value"),
-    State("conditions", "value"),
+    State("conditions", "value")
 )
 
 def predict_risk(n_clicks, age, sex, bmi, smoking, sbp, chol, hdl, conditions):
 
-    if n_clicks is None:
+    if n_clicks == 0:
         return ""
+
+    if None in [age, sex, bmi, smoking, sbp, chol, hdl]:
+        return html.Div("Please fill all fields", style={"color": "red"})
 
     if conditions is None:
         conditions = []
 
-    chol_ratio = chol / hdl
+    try:
 
-    bp_treat = 1 if "bp_treat" in conditions else 0
-    angina = 1 if "angina" in conditions else 0
-    ckd = 1 if "ckd" in conditions else 0
+        chol_ratio = chol / hdl
 
-    df = pd.DataFrame([{
-        "Age": age,
-        "Sex": sex,
-        "BMI": bmi,
-        "Smoking": smoking,
-        "SystolicBP": sbp,
-        "BPTreatment": bp_treat,
-        "Angina": angina,
-        "TotalCholesterol": chol,
-        "CholHDLRatio": chol_ratio,
-        "CKD": ckd
-    }])
+        bp_treat = 1 if "bp_treat" in conditions else 0
+        angina = 1 if "angina" in conditions else 0
+        ckd = 1 if "ckd" in conditions else 0
 
-    prob = model.predict_proba(df)[0][1]
+        df = pd.DataFrame([{
+            "Age": age,
+            "Sex": sex,
+            "BMI": bmi,
+            "Smoking": smoking,
+            "SystolicBP": sbp,
+            "BPTreatment": bp_treat,
+            "Angina": angina,
+            "TotalCholesterol": chol,
+            "CholHDLRatio": chol_ratio,
+            "CKD": ckd
+        }])
 
-    risk_class = "HIGH RISK" if prob >= 0.5 else "LOW RISK"
+        prob = model.predict_proba(df)[0][1]
 
-    color = "red" if prob >= 0.5 else "green"
+        risk_class = "HIGH RISK" if prob >= 0.5 else "LOW RISK"
+        color = "red" if prob >= 0.5 else "green"
 
-    return html.Div([
-        html.H3(risk_class, style={"color": color}),
-        html.H4(f"Predicted Probability: {round(prob*100,1)} %")
-    ])
+        return html.Div([
+            html.H2(risk_class, style={"color": color}),
+            html.H3(f"Predicted Probability: {round(prob*100,1)} %")
+        ])
 
-# ---------------------------
+    except Exception as e:
+
+        return html.Div(
+            f"Prediction Error: {str(e)}",
+            style={"color": "red"}
+        )
+
+# -------------------------
 # Run Local Server
-# ---------------------------
+# -------------------------
 
 if __name__ == "__main__":
     app.run_server(debug=True)
