@@ -161,7 +161,7 @@ def predict_risk(n_clicks, age, sex, bmi, smoking, sbp, chol, hdl, conditions):
             "CKD": ckd
         }])
 
-        prob = model.predict_proba(df)[0][1]
+        prob = model.predict(df)[0]
 
         risk_class = "HIGH RISK" if prob >= 0.5 else "LOW RISK"
         color = "red" if prob >= 0.5 else "green"
